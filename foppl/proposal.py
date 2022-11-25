@@ -33,7 +33,7 @@ class Proposal():
         self.graph = g
         self.ordered_vars = g.reverse_topological()
         self.ordered_latent_vars = [var for var in self.ordered_vars if var not in g.Graph["Y"].keys()]
-        self.n = len(g.Graph["Y"])
+        self.n = len(g.Graph["Y"]) #number of observations
 
         self.distributions = {var : Normal for var in self.ordered_latent_vars}
         self.constraints = {var : self.distributions[var].arg_constraints for var in self.ordered_latent_vars}
@@ -42,16 +42,18 @@ class Proposal():
     
     def sample(self, y : tc.Tensor) -> dict:
         _sample = {}
-        s = y
+        val = y #start by conditioning on y
         with tc.no_grad():
             for latent in self.ordered_latent_vars:
                 #get output of NN. Should be of dimension == # dist params
-                nn_out = self.links[latent].forward(s)
+                nn_out = self.links[latent].forward(val)
                 #iterate over nn output and the associated support for each element (ex : mu, sigma for a Normal, hence sigma has (0,inf) support) and apply appropriate transform
                 dist_params = [transform_to(constr)(dist_param) for constr, dist_param in zip(self.distributions[latent].arg_constraints.values(), nn_out)] #apply constraint transform
                 #sample from the conditional distribution
                 s = self.distributions[latent](*dist_params).sample()
                 _sample.update({latent : s})
+                if s.ndim == 0 : s = s.reshape(-1)
+                val = tc.cat([y, s])
 
         return _sample
     
@@ -63,8 +65,9 @@ class Proposal():
             nn_out = self.links[latent].forward(val)
             dist_params = [transform_to(constr)(dist_param) for constr, dist_param in zip(self.distributions[latent].arg_constraints.values(), nn_out)]
             lik += self.distributions[latent](*dist_params).log_prob(x)
-            if x.ndim == 0: val = x.reshape(-1)
-            else : val = x
+            if x.ndim == 0: x = x.reshape(-1)
+            val = tc.cat([val, x])
+
         return lik
     
     def get_params(self):
