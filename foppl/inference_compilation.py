@@ -133,5 +133,5 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
     observed = tc.stack(observed)
 
     print("\n=> Observed values : {}".format(observed))
-    samples = [tc.stack([val for val in proposal.sample(y = observed).values()]) for _ in range(num_samples)]
+    samples = [tc.flip(tc.stack([val for val in proposal.sample(y = observed).values()]), [0]) for _ in range(num_samples)]
     return samples
