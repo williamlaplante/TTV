@@ -12,13 +12,13 @@ deterministic_tests: []
 #[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 probabilistic_tests: []
 #[1,2,3,4,5,6,7,8]
-project_programs: [2]
+project_programs: [6]
 
 #which HW to run
 prog_set: 'project'
 
 # Daphne (re)compilation
-compile: False
+compile: True
 
 # Evaluation method
 #mode: 'desugar'
@@ -26,7 +26,8 @@ mode: 'graph'
 
 # Inference method
 
-inference_methods : ["inference_compilation", "importance_sampling", "MH_gibbs", "HMC"]
+inference_methods : ["importance_sampling"]
+#["inference_compilation", "importance_sampling", "MH_gibbs", "HMC"]
 num_samples: 5e3
 
 #inference compilation specific parameters

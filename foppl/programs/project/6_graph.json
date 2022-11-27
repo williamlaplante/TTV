@@ -1,0 +1,274 @@
+[
+    {
+        "observe-data": [
+            "fn",
+            [
+                "parameters",
+                "sigma"
+            ],
+            [
+                "let",
+                [
+                    [
+                        "pred1",
+                        "pred2",
+                        "pred3",
+                        "pred4",
+                        "pred5",
+                        "pred6"
+                    ],
+                    [
+                        "oneplanet",
+                        "parameters"
+                    ]
+                ],
+                [
+                    "let",
+                    [
+                        "dontcare12",
+                        [
+                            "observe",
+                            [
+                                "normal",
+                                "pred1",
+                                "sigma"
+                            ],
+                            66.1638
+                        ]
+                    ],
+                    [
+                        "let",
+                        [
+                            "dontcare13",
+                            [
+                                "observe",
+                                [
+                                    "normal",
+                                    "pred2",
+                                    "sigma"
+                                ],
+                                274.0242
+                            ]
+                        ],
+                        [
+                            "let",
+                            [
+                                "dontcare14",
+                                [
+                                    "observe",
+                                    [
+                                        "normal",
+                                        "pred3",
+                                        "sigma"
+                                    ],
+                                    482.0364
+                                ]
+                            ],
+                            [
+                                "let",
+                                [
+                                    "dontcare15",
+                                    [
+                                        "observe",
+                                        [
+                                            "normal",
+                                            "pred4",
+                                            "sigma"
+                                        ],
+                                        689.8718
+                                    ]
+                                ],
+                                [
+                                    "let",
+                                    [
+                                        "dontcare16",
+                                        [
+                                            "observe",
+                                            [
+                                                "normal",
+                                                "pred5",
+                                                "sigma"
+                                            ],
+                                            897.8566
+                                        ]
+                                    ],
+                                    [
+                                        "observe",
+                                        [
+                                            "normal",
+                                            "pred6",
+                                            "sigma"
+                                        ],
+                                        1105.8455
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    },
+    {
+        "V": [
+            "sample5",
+            "observe6",
+            "observe7",
+            "observe10",
+            "observe11",
+            "observe9",
+            "sample4",
+            "sample2",
+            "sample1",
+            "observe8",
+            "sample3"
+        ],
+        "A": {
+            "pred1": [
+                "observe6"
+            ],
+            "pred2": [
+                "observe7"
+            ],
+            "pred3": [
+                "observe8"
+            ],
+            "pred4": [
+                "observe9"
+            ],
+            "pred5": [
+                "observe10"
+            ],
+            "pred6": [
+                "observe11"
+            ]
+        },
+        "P": {
+            "sample5": [
+                "sample*",
+                [
+                    "normal",
+                    1,
+                    [
+                        "sqrt",
+                        5
+                    ]
+                ]
+            ],
+            "observe6": [
+                "observe*",
+                [
+                    "normal",
+                    "pred1",
+                    0.5
+                ],
+                66.1638
+            ],
+            "observe7": [
+                "observe*",
+                [
+                    "normal",
+                    "pred2",
+                    0.5
+                ],
+                274.0242
+            ],
+            "observe10": [
+                "observe*",
+                [
+                    "normal",
+                    "pred5",
+                    0.5
+                ],
+                897.8566
+            ],
+            "observe11": [
+                "observe*",
+                [
+                    "normal",
+                    "pred6",
+                    0.5
+                ],
+                1105.8455
+            ],
+            "observe9": [
+                "observe*",
+                [
+                    "normal",
+                    "pred4",
+                    0.5
+                ],
+                689.8718
+            ],
+            "sample4": [
+                "sample*",
+                [
+                    "normal",
+                    1,
+                    [
+                        "sqrt",
+                        5
+                    ]
+                ]
+            ],
+            "sample2": [
+                "sample*",
+                [
+                    "normal",
+                    1,
+                    [
+                        "sqrt",
+                        5
+                    ]
+                ]
+            ],
+            "sample1": [
+                "sample*",
+                [
+                    "normal",
+                    1,
+                    [
+                        "sqrt",
+                        5
+                    ]
+                ]
+            ],
+            "observe8": [
+                "observe*",
+                [
+                    "normal",
+                    "pred3",
+                    0.5
+                ],
+                482.0364
+            ],
+            "sample3": [
+                "sample*",
+                [
+                    "normal",
+                    1,
+                    [
+                        "sqrt",
+                        5
+                    ]
+                ]
+            ]
+        },
+        "Y": {
+            "observe6": 66.1638,
+            "observe7": 274.0242,
+            "observe8": 482.0364,
+            "observe9": 689.8718,
+            "observe10": 897.8566,
+            "observe11": 1105.8455
+        }
+    },
+    [
+        "vector",
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+        "sample5"
+    ]
+]

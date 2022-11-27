@@ -1,8 +1,13 @@
-(defn oneplanet [_ data sigma]
-  (let [obs (first data)
-        pred (second data)]
-    (observe (normal pred sigma) obs)
-    (rest (rest data))))
+(defn observe-data [parameters sigma]
+      (let [[pred1 pred2 pred3 pred4 pred5 pred6] (oneplanet parameters)]
+
+      (observe (normal pred1 sigma) 66.1638)
+      (observe (normal pred2 sigma) 274.0242)
+      (observe (normal pred3 sigma) 482.0364)
+      (observe (normal pred4 sigma) 689.8718)
+      (observe (normal pred5 sigma) 897.8566)
+      (observe (normal pred6 sigma) 1105.8455)))
+
 
 (let [mass (sample (normal 1 (sqrt 5)))
       period (sample (normal 1 (sqrt 5)))
@@ -11,31 +16,10 @@
       meananomaly (sample (normal 1 (sqrt 5)))
       inclination 90.0
       longnode 0.0
-      stellarmass = 0.95
-      sigma 0.5
-      
-      [pred1 pred2 pred3 pred4 pred5 pred6] (oneplanet mass period eccentricity argument meananomaly inclination longnode stellarmass)
-      
-      data (vector 66.1638 pred1 274.0242 pred2 482.0364 pred3 689.8718 pred4 897.8566 pred5 1105.8455 pred6)]
+      stellarmass 0.95
+      parameters (vector mass period eccentricity argument meananomaly inclination longnode stellarmass)
+      sigma 0.5]
+ 
+      (observe-data parameters sigma)
 
-      (loop 6 data observe-data sigma)
       (vector mass period eccentricity argument meananomaly))
-
-
-      
-
-
-
-(defn observe-data [_ data slope bias]
-  (let [xn (first data)
-        yn (second data)
-        zn (+ (* slope xn) bias)]
-    (observe (normal zn 1.0) yn)
-    (rest (rest data))))
-
-(let [slope (sample (normal 0.0 10.0))
-      bias  (sample (normal 0.0 10.0))
-      data (vector 1.0 2.1 2.0 3.9 3.0 5.3
-                   4.0 7.7 5.0 10.2 6.0 12.9)]
-  (loop 6 data observe-data slope bias)
-  (vector slope bias))

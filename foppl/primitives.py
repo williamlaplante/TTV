@@ -2,7 +2,8 @@ import torch as tc
 import ttvfast
 
 
-def oneplanet(mass, period, eccentricity, argument, meananomaly, inclination, longnode, stellar_mass):
+def oneplanet(parameters):
+    mass, period, eccentricity, argument, meananomaly, inclination, longnode, stellar_mass = parameters
     planet = ttvfast.models.Planet(
         mass = mass,
         period = period,
@@ -18,7 +19,7 @@ def oneplanet(mass, period, eccentricity, argument, meananomaly, inclination, lo
     transit_times = tc.tensor(transit_times).float()
     transit_times = transit_times[transit_times!=-2]
     transit_times = transit_times[:6]
-    
+
     return transit_times
 
 
