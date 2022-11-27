@@ -73,7 +73,7 @@ class ModelDataset(Dataset):
 
 
 
-def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, wandb_name = None, wandb_run = False):
+def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, learning_rate=1e-4, lstm=True, wandb_name = None, wandb_run = False):
     """
     Parameters
     ----------
@@ -93,11 +93,13 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
 
     dataloader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
-    proposal = Proposal(g)
+    proposal = Proposal(g, lstm=lstm)
+    params = proposal.get_params()
+    optimizer = tc.optim.Adam(params, lr=learning_rate)
 
-    optimizer = tc.optim.Adam(proposal.get_params(), lr=1e-4)
-
-    print("=> Running {} epochs...".format(num_epochs))
+    print("\n=> Training {} parameters | LSTM : {}".format(proposal.num_params, lstm))
+    print("=> Running {} epochs...".format(num_epochs+1))
+    print("=> Learning Rate : {} | Batch Size : {}".format(learning_rate, batch_size))
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print("\n=> Epoch {}...\n".format(epoch))
 
@@ -107,20 +109,29 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
 
             # get the data
             X, y, lik = data
+
+            if i==0 and epoch==0:
+                print("=> Single sample : X = {} | Y = {}\n".format(X[0], y[0]))
  
             #compute log probability of proposal with 
             log_Q = tc.stack([proposal.log_prob(x, y) for (x,y) in zip(X, y)])
-            log_P = lik #NEED TO GET THE LIKELIHOOD OF SAMPLE (LOG PROB OF MODEL)
 
             loss = -log_Q.mean()
             loss.backward()
             optimizer.step()
 
-            if i%5 == 0 : print("=> Loss : {}".format(loss.detach().clone()))
+            if i%1 == 0 : print("=> Loss : {}".format(loss.detach().clone()))
             if wandb_run : log_loss(loss.detach().clone(), i, program=program_name, wandb_name=wandb_name)
 
     print('Finished Training\n')
 
-    observed = tc.stack([tc.tensor(obs).float() for obs in g.Graph["Y"].values()])
+    observed = []
+    for var in dataset.ordered_vars:
+        if var in g.Graph["Y"].keys():
+            observed.append(tc.tensor(g.Graph["Y"][var]).float())
+
+    observed = tc.stack(observed)
+
+    print("\n=> Observed values : {}".format(observed))
     samples = [tc.stack([val for val in proposal.sample(y = observed).values()]) for _ in range(num_samples)]
     return samples

@@ -1,10 +1,25 @@
 import torch as tc
 import ttvfast
-from typing import List
 
 
-def _ttvfast(planets : List[ttvfast.models.Planet]):
-    return
+def oneplanet(mass, period, eccentricity, argument, meananomaly, inclination, longnode, stellar_mass):
+    planet = ttvfast.models.Planet(
+        mass = mass,
+        period = period,
+        eccentricity = eccentricity,
+        argument = argument,
+        inclination = inclination,
+        longnode = longnode,
+        mean_anomaly = meananomaly
+    )
+
+    results = ttvfast.ttvfast([planet], stellar_mass, time=0.0, dt=0.5, total=2500)
+    idx, epochs, transit_times, rsky, vsky = results["positions"]
+    transit_times = tc.tensor(transit_times).float()
+    transit_times = transit_times[transit_times!=-2]
+    transit_times = transit_times[:6]
+    
+    return transit_times
 
 
 def _and(first, second):
@@ -140,6 +155,6 @@ primitives = {
     'dirac': Dirac,
 
     #Extra 
-    'ttvfast' : _ttvfast
+    'oneplanet' : oneplanet
     
 }

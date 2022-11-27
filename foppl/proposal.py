@@ -2,10 +2,40 @@ import torch as tc
 from torch import nn
 from torch.distributions.constraint_registry import transform_to
 from distributions import Normal
-from itertools import chain
+from torch.autograd import Variable
 
 
 #Typical NN. Takes input dimension (conditional), output dimension (# conditional dist parameters)
+class LSTM(nn.Module):
+    def __init__(self, dim_in, dim_out):
+        super(LSTM, self).__init__()
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+        self.num_layers = 5
+        self.hidden_size = 30
+ 
+        self.lstm = nn.LSTM(input_size=dim_in, hidden_size=self.hidden_size,
+                          num_layers=self.num_layers, batch_first=True) #lstm
+        self.sigmoid = nn.Sigmoid()
+        self.fc1 = nn.Linear(self.hidden_size, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, dim_out)
+    
+    def forward(self,x):
+        x = x.view(-1, *x.shape)
+        h_0 = Variable(tc.zeros(self.num_layers, self.hidden_size)) #hidden state
+        c_0 = Variable(tc.zeros(self.num_layers, self.hidden_size)) #internal state
+        # Propagate input through LSTM
+        output, (hn, cn) = self.lstm(x, (h_0, c_0)) #lstm with input, hidden, and internal state
+        hn = hn.view(-1, self.hidden_size) #reshaping the data for Dense layer next
+        out = self.fc1(hn)
+        out = self.sigmoid(out)
+        out = self.fc2(out)
+        out = self.sigmoid(out)
+        out = self.fc3(out)
+
+        return out.reshape(-1)
+
 class NeuralNetwork(nn.Module):
     def __init__(self, dim_in, dim_out):
         super(NeuralNetwork, self).__init__()
@@ -13,14 +43,25 @@ class NeuralNetwork(nn.Module):
         self.dim_out = dim_out
         self.flatten = nn.Flatten()
         self.net = nn.Sequential(
-            nn.Linear(dim_in, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64,32),
-            nn.ReLU(),
-            nn.Linear(32, dim_out),
+            nn.Linear(dim_in, 128),
+            nn.Tanh(),
+            nn.Linear(128, 256),
+            nn.Tanh(),
+            nn.Linear(256, 512),
+            nn.Tanh(),
+            nn.Linear(512, 1024),
+            nn.Tanh(),
+            nn.Linear(1024, 512),
+            nn.Tanh(),
+            nn.Linear(512, 256),
+            nn.Tanh(),
+            nn.Linear(256, 128),
+            nn.Tanh(),
+            nn.Linear(128, 64),
+            nn.Tanh(),
+            nn.Linear(64, dim_out),
         )
+        self.num_params = 0
 
     def forward(self, x):
         return self.net(x)
@@ -28,8 +69,9 @@ class NeuralNetwork(nn.Module):
 #The proposal, P(X | Y) = P(x_1 | Y, x_2,...x_n)P(x_2 | Y, x_3, ..., x_n)...P(x_n | Y)
 #having the inverse dependencies allows us the remove some of the conditioning (and thus less parameter estimations). But it's not mandatory.
 class Proposal():
-    def __init__(self, g):
+    def __init__(self, g, lstm):
         super().__init__()
+        self.lstm = lstm
         self.graph = g
         self.ordered_vars = g.reverse_topological()
         self.ordered_latent_vars = [var for var in self.ordered_vars if var not in g.Graph["Y"].keys()]
@@ -37,7 +79,12 @@ class Proposal():
 
         self.distributions = {var : Normal for var in self.ordered_latent_vars}
         self.constraints = {var : self.distributions[var].arg_constraints for var in self.ordered_latent_vars}
-        self.links = {var : NeuralNetwork(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.ordered_latent_vars)}
+        
+        if self.lstm:
+            self.links = {var : LSTM(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.ordered_latent_vars)}
+        else:
+            self.links = {var : NeuralNetwork(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.ordered_latent_vars)}
+        
         return
     
     def sample(self, y : tc.Tensor) -> dict:
@@ -72,7 +119,10 @@ class Proposal():
     
     def get_params(self):
         params = []
+        num_params = 0
         for latent, neuralnet in self.links.items():
             params += [*neuralnet.parameters()]
+            num_params += sum(p.numel() for p in neuralnet.parameters() if p.requires_grad)
+        self.num_params = num_params
         return params
 
