@@ -90,7 +90,7 @@ def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_d
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
 
                 if i==6 : 
-                    print("Transit times : ", oneplanet(tc.cat([samples.mean(axis=0), tc.tensor([90.0, 0.0, 0.95])])))
+                    print("Transit times : ", oneplanet(tc.cat([samples.mean(axis=0), tc.tensor([90.0, 0.0, 0.95])]), -1))
                     print("True Transit times : ", [66.1638, 274.0242, 482.0364, 689.8718, 897.8566, 1105.8455])
 
                 t_finish = time()
@@ -100,15 +100,25 @@ def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_d
                 t_start = time()
                 samples = MH_gibbs(g=ast_or_graph, num_samples=num_samples, wandb_name=wandb_name, verbose=verbose)
                 samples = tc.stack(samples)
+                samples = samples[int(num_samples/5):]
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
+
+                if i==6 : 
+                    print("Transit times : ", oneplanet(tc.cat([samples.mean(axis=0), tc.tensor([90.0, 0.0, 0.95])]), -1))
+                    print("True Transit times : ", [66.1638, 274.0242, 482.0364, 689.8718, 897.8566, 1105.8455])
+
                 t_finish = time()
                 print('Time taken [s]:', t_finish-t_start)
             
             if inference_method == "HMC":
                 t_start = time()
                 samples = HMC_sampling(g=ast_or_graph, num_samples=num_samples, wandb_name=wandb_name, verbose=verbose)
-                samples = tc.stack(samples)
+                samples = tc.stack(samples).detach()
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
+                if i==6 : 
+                    print("Transit times : ", oneplanet(tc.cat([samples.mean(axis=0), tc.tensor([90.0, 0.0, 0.95])]), -1))
+                    print("True Transit times : ", [66.1638, 274.0242, 482.0364, 689.8718, 897.8566, 1105.8455])
+
                 t_finish = time()
                 print('Time taken [s]:', t_finish-t_start)
 

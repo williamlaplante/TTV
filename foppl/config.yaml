@@ -18,7 +18,7 @@ project_programs: [6]
 prog_set: 'project'
 
 # Daphne (re)compilation
-compile: True
+compile: False
 
 # Evaluation method
 #mode: 'desugar'
@@ -26,9 +26,9 @@ mode: 'graph'
 
 # Inference method
 
-inference_methods : ["importance_sampling"]
+inference_methods : ["HMC"]
 #["inference_compilation", "importance_sampling", "MH_gibbs", "HMC"]
-num_samples: 5e3
+num_samples: 1e3
 
 #inference compilation specific parameters
 num_traces_training: 1e5 #number of traces the inference compilation engine trains on

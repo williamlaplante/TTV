@@ -70,20 +70,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         4
                     ],
@@ -96,20 +93,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         1
                     ],
@@ -157,20 +151,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         3
                     ],
@@ -183,20 +174,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         0
                     ],
@@ -209,20 +197,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         2
                     ],
@@ -235,20 +220,17 @@
                 [
                     "normal",
                     [
-                        "get",
+                        "oneplanet",
                         [
-                            "oneplanet",
-                            [
-                                "vector",
-                                "sample6",
-                                "sample7",
-                                "sample8",
-                                "sample9",
-                                "sample10",
-                                90.0,
-                                0.0,
-                                0.95
-                            ]
+                            "vector",
+                            "sample6",
+                            "sample7",
+                            "sample8",
+                            "sample9",
+                            "sample10",
+                            90.0,
+                            0.0,
+                            0.95
                         ],
                         5
                     ],

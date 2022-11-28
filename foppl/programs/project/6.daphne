@@ -9,14 +9,13 @@
       parameters (vector mass period eccentricity argument meananomaly inclination longnode stellarmass)
       sigma 0.5
       data (vector 66.1638 274.0242 482.0364 689.8718 897.8566 1105.8455)
-      ttv (oneplanet parameters)
       ]
 
-      (observe (normal (get ttv 0) sigma) (get data 0))
-      (observe (normal (get ttv 1) sigma) (get data 1))
-      (observe (normal (get ttv 2) sigma) (get data 2))
-      (observe (normal (get ttv 3) sigma) (get data 3))
-      (observe (normal (get ttv 4) sigma) (get data 4))
-      (observe (normal (get ttv 5) sigma) (get data 5))
+      (observe (normal (oneplanet parameters 0) sigma) (get data 0))
+      (observe (normal (oneplanet parameters 1) sigma) (get data 1))
+      (observe (normal (oneplanet parameters 2) sigma) (get data 2))
+      (observe (normal (oneplanet parameters 3) sigma) (get data 3))
+      (observe (normal (oneplanet parameters 4) sigma) (get data 4))
+      (observe (normal (oneplanet parameters 5) sigma) (get data 5))
 
       (vector mass period eccentricity argument meananomaly))

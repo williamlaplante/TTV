@@ -117,17 +117,17 @@ def HMC(X : dict, Y : dict, num_samples : int, T : int, M : tc.tensor, eps : flo
 
     return samples
 
-def HMC_sampling(g, num_samples=int(1e3), T=10, eps=0.1, M_scale=1, verbose=False, wandb_name=None):
+def HMC_sampling(g, num_samples=int(1e3), T=8, eps=0.0001, M_scale=1, verbose=False, wandb_name=None):
     
 
     if not isinstance(g, graph):
         raise Exception("Not yet implemented non-graph programs.")
 
-    X, Y = split_latent_obs(g)
+    X, Y = split_latent_obs(g) #get the latent and observed variables
 
     initial_sample = sample_from_joint(g) #get a sample from the joint
 
-    Y = {k : initial_sample[k] for k in initial_sample.keys() if k in Y}
+    Y = {k : initial_sample[k] for k in initial_sample.keys() if k in Y} #split the observed a
     X = {k : initial_sample[k] for k in initial_sample.keys() if k in X}
 
     for x in X.keys(): #make the latent floats if needed, and tell torch to require the gradient for the latent vars
