@@ -17,6 +17,7 @@ from inference_compilation import inference_compilation
 from importance_sampling import likelihood_weighting
 from MH_gibbs import MH_gibbs
 from HMC import HMC_sampling
+from primitives import oneplanet
 
 def create_class(ast_or_graph, mode):
     if mode == 'desugar':
@@ -87,6 +88,11 @@ def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_d
                 samples = likelihood_weighting(g=ast_or_graph, num_samples=num_samples, wandb_name=wandb_name, verbose=verbose)
                 samples = tc.stack(samples)
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
+
+                if i==6 : 
+                    print("Transit times : ", oneplanet(tc.cat([samples.mean(axis=0), tc.tensor([90.0, 0.0, 0.95])])))
+                    print("True Transit times : ", [66.1638, 274.0242, 482.0364, 689.8718, 897.8566, 1105.8455])
+
                 t_finish = time()
                 print('Time taken [s]:', t_finish-t_start)
 

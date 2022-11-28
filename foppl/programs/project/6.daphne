@@ -1,25 +1,22 @@
-(defn observe-data [parameters sigma]
-      (let [[pred1 pred2 pred3 pred4 pred5 pred6] (oneplanet parameters)]
-
-      (observe (normal pred1 sigma) 66.1638)
-      (observe (normal pred2 sigma) 274.0242)
-      (observe (normal pred3 sigma) 482.0364)
-      (observe (normal pred4 sigma) 689.8718)
-      (observe (normal pred5 sigma) 897.8566)
-      (observe (normal pred6 sigma) 1105.8455)))
-
-
-(let [mass (sample (normal 1 (sqrt 5)))
-      period (sample (normal 1 (sqrt 5)))
-      eccentricity (sample (normal 1 (sqrt 5)))
-      argument (sample (normal 1 (sqrt 5)))
-      meananomaly (sample (normal 1 (sqrt 5)))
+(let [mass (sample (beta 1 5))
+      period (sample (normal 210 (sqrt 5)))
+      eccentricity (sample (beta 1 5))
+      argument (sample (uniform-continuous 0 360))
+      meananomaly (sample (uniform-continuous 0 360))
       inclination 90.0
       longnode 0.0
       stellarmass 0.95
       parameters (vector mass period eccentricity argument meananomaly inclination longnode stellarmass)
-      sigma 0.5]
- 
-      (observe-data parameters sigma)
+      sigma 0.5
+      data (vector 66.1638 274.0242 482.0364 689.8718 897.8566 1105.8455)
+      ttv (oneplanet parameters)
+      ]
+
+      (observe (normal (get ttv 0) sigma) (get data 0))
+      (observe (normal (get ttv 1) sigma) (get data 1))
+      (observe (normal (get ttv 2) sigma) (get data 2))
+      (observe (normal (get ttv 3) sigma) (get data 3))
+      (observe (normal (get ttv 4) sigma) (get data 4))
+      (observe (normal (get ttv 5) sigma) (get data 5))
 
       (vector mass period eccentricity argument meananomaly))

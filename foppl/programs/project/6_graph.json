@@ -1,274 +1,277 @@
 [
-    {
-        "observe-data": [
-            "fn",
-            [
-                "parameters",
-                "sigma"
-            ],
-            [
-                "let",
-                [
-                    [
-                        "pred1",
-                        "pred2",
-                        "pred3",
-                        "pred4",
-                        "pred5",
-                        "pred6"
-                    ],
-                    [
-                        "oneplanet",
-                        "parameters"
-                    ]
-                ],
-                [
-                    "let",
-                    [
-                        "dontcare12",
-                        [
-                            "observe",
-                            [
-                                "normal",
-                                "pred1",
-                                "sigma"
-                            ],
-                            66.1638
-                        ]
-                    ],
-                    [
-                        "let",
-                        [
-                            "dontcare13",
-                            [
-                                "observe",
-                                [
-                                    "normal",
-                                    "pred2",
-                                    "sigma"
-                                ],
-                                274.0242
-                            ]
-                        ],
-                        [
-                            "let",
-                            [
-                                "dontcare14",
-                                [
-                                    "observe",
-                                    [
-                                        "normal",
-                                        "pred3",
-                                        "sigma"
-                                    ],
-                                    482.0364
-                                ]
-                            ],
-                            [
-                                "let",
-                                [
-                                    "dontcare15",
-                                    [
-                                        "observe",
-                                        [
-                                            "normal",
-                                            "pred4",
-                                            "sigma"
-                                        ],
-                                        689.8718
-                                    ]
-                                ],
-                                [
-                                    "let",
-                                    [
-                                        "dontcare16",
-                                        [
-                                            "observe",
-                                            [
-                                                "normal",
-                                                "pred5",
-                                                "sigma"
-                                            ],
-                                            897.8566
-                                        ]
-                                    ],
-                                    [
-                                        "observe",
-                                        [
-                                            "normal",
-                                            "pred6",
-                                            "sigma"
-                                        ],
-                                        1105.8455
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
-    },
+    {},
     {
         "V": [
-            "sample5",
-            "observe6",
-            "observe7",
-            "observe10",
+            "sample10",
+            "observe15",
+            "observe12",
+            "sample7",
+            "sample8",
+            "sample9",
+            "sample6",
+            "observe14",
             "observe11",
-            "observe9",
-            "sample4",
-            "sample2",
-            "sample1",
-            "observe8",
-            "sample3"
+            "observe13",
+            "observe16"
         ],
         "A": {
-            "pred1": [
-                "observe6"
+            "sample10": [
+                "observe15",
+                "observe12",
+                "observe14",
+                "observe11",
+                "observe13",
+                "observe16"
             ],
-            "pred2": [
-                "observe7"
+            "sample7": [
+                "observe15",
+                "observe12",
+                "observe14",
+                "observe11",
+                "observe13",
+                "observe16"
             ],
-            "pred3": [
-                "observe8"
+            "sample8": [
+                "observe15",
+                "observe12",
+                "observe14",
+                "observe11",
+                "observe13",
+                "observe16"
             ],
-            "pred4": [
-                "observe9"
+            "sample9": [
+                "observe15",
+                "observe12",
+                "observe14",
+                "observe11",
+                "observe13",
+                "observe16"
             ],
-            "pred5": [
-                "observe10"
-            ],
-            "pred6": [
-                "observe11"
+            "sample6": [
+                "observe15",
+                "observe12",
+                "observe14",
+                "observe11",
+                "observe13",
+                "observe16"
             ]
         },
         "P": {
-            "sample5": [
+            "sample10": [
+                "sample*",
+                [
+                    "uniform-continuous",
+                    0,
+                    360
+                ]
+            ],
+            "observe15": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
+                        4
+                    ],
+                    0.5
+                ],
+                897.8566
+            ],
+            "observe12": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
+                        1
+                    ],
+                    0.5
+                ],
+                274.0242
+            ],
+            "sample7": [
                 "sample*",
                 [
                     "normal",
-                    1,
+                    210,
                     [
                         "sqrt",
                         5
                     ]
                 ]
             ],
-            "observe6": [
-                "observe*",
+            "sample8": [
+                "sample*",
                 [
-                    "normal",
-                    "pred1",
-                    0.5
-                ],
-                66.1638
+                    "beta",
+                    1,
+                    5
+                ]
             ],
-            "observe7": [
-                "observe*",
+            "sample9": [
+                "sample*",
                 [
-                    "normal",
-                    "pred2",
-                    0.5
-                ],
-                274.0242
+                    "uniform-continuous",
+                    0,
+                    360
+                ]
             ],
-            "observe10": [
+            "sample6": [
+                "sample*",
+                [
+                    "beta",
+                    1,
+                    5
+                ]
+            ],
+            "observe14": [
                 "observe*",
                 [
                     "normal",
-                    "pred5",
+                    [
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
+                        3
+                    ],
                     0.5
                 ],
-                897.8566
+                689.8718
             ],
             "observe11": [
                 "observe*",
                 [
                     "normal",
-                    "pred6",
+                    [
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
+                        0
+                    ],
                     0.5
                 ],
-                1105.8455
+                66.1638
             ],
-            "observe9": [
+            "observe13": [
                 "observe*",
                 [
                     "normal",
-                    "pred4",
-                    0.5
-                ],
-                689.8718
-            ],
-            "sample4": [
-                "sample*",
-                [
-                    "normal",
-                    1,
                     [
-                        "sqrt",
-                        5
-                    ]
-                ]
-            ],
-            "sample2": [
-                "sample*",
-                [
-                    "normal",
-                    1,
-                    [
-                        "sqrt",
-                        5
-                    ]
-                ]
-            ],
-            "sample1": [
-                "sample*",
-                [
-                    "normal",
-                    1,
-                    [
-                        "sqrt",
-                        5
-                    ]
-                ]
-            ],
-            "observe8": [
-                "observe*",
-                [
-                    "normal",
-                    "pred3",
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
+                        2
+                    ],
                     0.5
                 ],
                 482.0364
             ],
-            "sample3": [
-                "sample*",
+            "observe16": [
+                "observe*",
                 [
                     "normal",
-                    1,
                     [
-                        "sqrt",
+                        "get",
+                        [
+                            "oneplanet",
+                            [
+                                "vector",
+                                "sample6",
+                                "sample7",
+                                "sample8",
+                                "sample9",
+                                "sample10",
+                                90.0,
+                                0.0,
+                                0.95
+                            ]
+                        ],
                         5
-                    ]
-                ]
+                    ],
+                    0.5
+                ],
+                1105.8455
             ]
         },
         "Y": {
-            "observe6": 66.1638,
-            "observe7": 274.0242,
-            "observe8": 482.0364,
-            "observe9": 689.8718,
-            "observe10": 897.8566,
-            "observe11": 1105.8455
+            "observe11": 66.1638,
+            "observe12": 274.0242,
+            "observe13": 482.0364,
+            "observe14": 689.8718,
+            "observe15": 897.8566,
+            "observe16": 1105.8455
         }
     },
     [
         "vector",
-        "sample1",
-        "sample2",
-        "sample3",
-        "sample4",
-        "sample5"
+        "sample6",
+        "sample7",
+        "sample8",
+        "sample9",
+        "sample10"
     ]
 ]

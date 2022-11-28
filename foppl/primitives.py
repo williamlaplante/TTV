@@ -4,6 +4,7 @@ import ttvfast
 
 def oneplanet(parameters):
     mass, period, eccentricity, argument, meananomaly, inclination, longnode, stellar_mass = parameters
+    
     planet = ttvfast.models.Planet(
         mass = mass,
         period = period,
@@ -13,13 +14,23 @@ def oneplanet(parameters):
         longnode = longnode,
         mean_anomaly = meananomaly
     )
+    len_transit_time = 0
+    total = 2500
+    while len_transit_time<6:
+        if total>=5000:
+            raise Exception("Exceeded the total number of integration steps.")
+        results = ttvfast.ttvfast([planet], stellar_mass, time=0.0, dt=0.5, total=total)
+        idx, epochs, transit_times, rsky, vsky = results["positions"]
+        transit_times = tc.tensor(transit_times).float()
+        transit_times = transit_times[transit_times!=-2]
+        len_transit_time = len(transit_times)
+        total+=500
 
-    results = ttvfast.ttvfast([planet], stellar_mass, time=0.0, dt=0.5, total=2500)
-    idx, epochs, transit_times, rsky, vsky = results["positions"]
-    transit_times = tc.tensor(transit_times).float()
-    transit_times = transit_times[transit_times!=-2]
+
+    
     transit_times = transit_times[:6]
 
+    
     return transit_times
 
 
@@ -134,6 +145,7 @@ primitives = {
     'last' : last,
     'append' : append,
     'rest' : rest,
+    'range': range,
     # ...
 
     # Matrices
@@ -156,6 +168,6 @@ primitives = {
     'dirac': Dirac,
 
     #Extra 
-    'oneplanet' : oneplanet
+    'oneplanet' : oneplanet,
     
 }
