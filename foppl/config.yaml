@@ -12,7 +12,7 @@ deterministic_tests: []
 #[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 probabilistic_tests: []
 #[1,2,3,4,5,6,7,8]
-project_programs: [6]
+project_programs: [2]
 
 #which HW to run
 prog_set: 'project'
@@ -26,7 +26,7 @@ mode: 'graph'
 
 # Inference method
 
-inference_methods : ["HMC"]
+inference_methods : ["inference_compilation"]
 #["inference_compilation", "importance_sampling", "MH_gibbs", "HMC"]
 num_samples: 1e3
 
@@ -38,7 +38,7 @@ learning_rate : 1e-4
 lstm : False
 
 # For program 1 : batch size = 2e2 or 3e2, learning_rate=1e-4, num_epochs=3, num_traces_learning=1e5 works well
-#
+# For program 2 : 
 #
 
 save : False

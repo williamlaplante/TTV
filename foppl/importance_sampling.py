@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from graph_based_sampling import graph
 from general_sampling import get_sample
-from utils import log_sample
+from utils import log_sample, calculate_effective_sample_size
 
 
 def likelihood_weighting(g : graph, num_samples=int(1e3), wandb_name=None, verbose=False):
@@ -25,6 +25,8 @@ def likelihood_weighting(g : graph, num_samples=int(1e3), wandb_name=None, verbo
         weights = tc.exp(log_weights)
         normalized_weights = tc.div(weights, weights.sum())
 
+        calculate_effective_sample_size(weights, verbose=True)
+        
         if tc.isclose(weights.sum(), tc.tensor([0.0])):
             raise Exception("Likelihood weights are all 0's.")
 

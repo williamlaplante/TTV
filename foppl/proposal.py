@@ -5,7 +5,6 @@ from distributions import Normal
 from torch.autograd import Variable
 
 
-#Typical NN. Takes input dimension (conditional), output dimension (# conditional dist parameters)
 class LSTM(nn.Module):
     def __init__(self, dim_in, dim_out):
         super(LSTM, self).__init__()
@@ -36,6 +35,7 @@ class LSTM(nn.Module):
 
         return out.reshape(-1)
 
+#Typical NN. Takes input dimension (conditional), output dimension (# conditional dist parameters)
 class NeuralNetwork(nn.Module):
     def __init__(self, dim_in, dim_out):
         super(NeuralNetwork, self).__init__()
@@ -73,17 +73,17 @@ class Proposal():
         super().__init__()
         self.lstm = lstm
         self.graph = g
-        self.ordered_vars = g.reverse_topological()
-        self.ordered_latent_vars = [var for var in self.ordered_vars if var not in g.Graph["Y"].keys()]
+        self.reverse_ordered_vars = g.reverse_topological()
+        self.reverse_ordered_latent_vars = [var for var in self.reverse_ordered_vars if var not in g.Graph["Y"].keys()]
         self.n = len(g.Graph["Y"]) #number of observations
 
-        self.distributions = {var : Normal for var in self.ordered_latent_vars}
-        self.constraints = {var : self.distributions[var].arg_constraints for var in self.ordered_latent_vars}
+        self.distributions = {var : Normal for var in self.reverse_ordered_latent_vars}
+        self.constraints = {var : self.distributions[var].arg_constraints for var in self.reverse_ordered_latent_vars}
         
         if self.lstm:
-            self.links = {var : LSTM(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.ordered_latent_vars)}
+            self.links = {var : LSTM(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.reverse_ordered_latent_vars)}
         else:
-            self.links = {var : NeuralNetwork(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.ordered_latent_vars)}
+            self.links = {var : NeuralNetwork(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.reverse_ordered_latent_vars)}
         
         return
     
@@ -91,7 +91,7 @@ class Proposal():
         _sample = {}
         val = y #start by conditioning on y
         with tc.no_grad():
-            for latent in self.ordered_latent_vars:
+            for latent in self.reverse_ordered_latent_vars:
                 #get output of NN. Should be of dimension == # dist params
                 nn_out = self.links[latent].forward(val)
                 #iterate over nn output and the associated support for each element (ex : mu, sigma for a Normal, hence sigma has (0,inf) support) and apply appropriate transform
@@ -108,7 +108,7 @@ class Proposal():
         lik = tc.tensor(0.0)
         val = y
         #we need to flip sample, since it comes in topological order and we iterate over the reverse order.
-        for latent, x in zip(self.ordered_latent_vars, tc.flip(sample, [0])):
+        for latent, x in zip(self.reverse_ordered_latent_vars, tc.flip(sample, [0])):
             nn_out = self.links[latent].forward(val)
             dist_params = [transform_to(constr)(dist_param) for constr, dist_param in zip(self.distributions[latent].arg_constraints.values(), nn_out)]
             lik += self.distributions[latent](*dist_params).log_prob(x)

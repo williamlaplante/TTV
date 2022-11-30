@@ -102,3 +102,18 @@ def log_loss(loss: dict, i: int, program, wandb_name: str) -> None:
     wandb_dict = {wandb_name_here+'; epoch': i}
     wandb_dict[wandb_name_here+';'] = loss
     wandb.log(wandb_dict)
+
+def calculate_effective_sample_size(weights:tc.Tensor, verbose=False):
+    '''
+    Calculate the effective sample size via the importance weights
+    '''
+    N = len(weights)
+    weights /= weights.sum()
+    ESS = 1./(weights**2).sum()
+    ESS = ESS.type(tc.float)
+    if verbose:
+        print('Sample size:', N)
+        print('Effective sample size:', ESS)
+        print('Fractional sample size:', ESS/N)
+        print('Sum of weights:', weights.sum())
+    return ESS

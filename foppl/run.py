@@ -125,7 +125,6 @@ def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_d
 
             if inference_method == "inference_compilation":
                 samples = inference_compilation(g = ast_or_graph, num_samples=num_samples, num_traces_training=num_traces_training, learning_rate=learning_rate, batch_size=batch_size, program_name="program " + str(i), num_epochs=num_epochs, lstm=lstm, wandb_name=wandb_name, wandb_run=wandb_run)
-                samples = tc.stack(samples)
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
                 t_finish = time()
 

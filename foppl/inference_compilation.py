@@ -1,14 +1,14 @@
 import itertools
 import json
-
+import pickle
 import torch as tc
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-
+import numpy as np
 from proposal import Proposal
 from graph_based_sampling import Eval, graph, standard_env
-from utils import log_loss, log_params, log_sample
+from utils import log_loss, log_params, log_sample, calculate_effective_sample_size
 
 
 class ModelDataset(Dataset):
@@ -16,6 +16,7 @@ class ModelDataset(Dataset):
     def __init__(self, g, num_samples = int(1e4)):
         self.graph = g
         self.ordered_vars = g.topological()
+        self.latent_ordered_vars = [var for var in self.ordered_vars if var not in g.Graph["Y"].keys()]
         self.num_samples = num_samples
         self.X = []
         self.Y = []
@@ -49,6 +50,18 @@ class ModelDataset(Dataset):
 
             return x, y, lik
     
+    def log_prob(self, sample : dict) -> tc.Tensor:
+        sigma = {"logW":tc.tensor(0.0), "logP":tc.tensor(0.0), "logJoint":tc.tensor(0.0)}
+        env = standard_env()
+        env.update(sample)
+        lik = tc.tensor(0.0)
+        for var in self.latent_ordered_vars:
+            dist, _ = Eval(self.graph.Graph["P"][var][1], sigma, env)
+            lik+=dist.log_prob(sample[var])
+    
+        return lik
+
+
     def build_dataset(self):
         self.X = []
         self.Y = []
@@ -73,7 +86,7 @@ class ModelDataset(Dataset):
 
 
 
-def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, learning_rate=1e-4, lstm=True, wandb_name = None, wandb_run = False):
+def inference_compilation(g : graph, program_name : str, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, learning_rate=1e-4, lstm=False, wandb_name = None, wandb_run = False):
     """
     Parameters
     ----------
@@ -96,12 +109,15 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
     proposal = Proposal(g, lstm=lstm)
     params = proposal.get_params()
     optimizer = tc.optim.Adam(params, lr=learning_rate)
+    losses = []
 
     print("\n=> Training {} parameters | LSTM : {}".format(proposal.num_params, lstm))
     print("=> Running {} epochs...".format(num_epochs+1))
     print("=> Learning Rate : {} | Batch Size : {}".format(learning_rate, batch_size))
+
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print("\n=> Epoch {}...\n".format(epoch))
+        losses_epoch = []
 
         for i, data in enumerate(dataloader):
             #zero parameter gradients
@@ -121,7 +137,13 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
             optimizer.step()
 
             if i%1 == 0 : print("=> Loss : {}".format(loss.detach().clone()))
+            losses_epoch.append(loss.detach().clone())
             if wandb_run : log_loss(loss.detach().clone(), i, program=program_name, wandb_name=wandb_name)
+
+        with open("./results/proposal_epoch{}.pkl".format(epoch), "wb") as f:
+            pickle.dump(proposal, f)
+
+        losses.append(losses_epoch)
 
     print('Finished Training\n')
 
@@ -133,5 +155,31 @@ def inference_compilation(g, program_name, num_samples = int(1e3), num_traces_tr
     observed = tc.stack(observed)
 
     print("\n=> Observed values : {}".format(observed))
-    samples = [tc.flip(tc.stack([val for val in proposal.sample(y = observed).values()]), [0]) for _ in range(num_samples)]
-    return samples
+
+    print("\n=>Importance sampling with compilation artifact...\n")
+    proposal_samples = []
+    proposal_weights = []
+    
+    for _ in range(num_samples):
+        sample = proposal.sample(y = observed)
+        proposal_samples.append(tc.stack([sample[latent] for latent in dataset.latent_ordered_vars])) #sample in the topological order
+        proposal_weights.append(dataset.log_prob(sample))
+
+
+    proposal_samples = tc.stack(proposal_samples)
+    proposal_weights = tc.stack(proposal_weights)
+
+    calculate_effective_sample_size(proposal_weights, verbose=True)
+    
+    tc.save(proposal_samples, "./results/proposal_samples.pt")
+    tc.save(proposal_weights, "./results/proposal_weights.pt")
+    tc.save(losses, "./results/losses.pt")
+
+    with open("./results/proposal.pkl", "wb") as f:
+        pickle.dump(proposal, f)
+    
+    with open("./results/graphical_model.pkl", "wb") as f:
+        pickle.dump(g, f)
+
+
+    return proposal_samples
