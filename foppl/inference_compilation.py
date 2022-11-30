@@ -174,9 +174,6 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     tc.save(proposal_samples, "./results/proposal_samples.pt")
     tc.save(proposal_weights, "./results/proposal_weights.pt")
     tc.save(losses, "./results/losses.pt")
-
-    with open("./results/proposal.pkl", "wb") as f:
-        pickle.dump(proposal, f)
     
     with open("./results/graphical_model.pkl", "wb") as f:
         pickle.dump(g, f)
