@@ -144,6 +144,7 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
             pickle.dump(proposal, f)
 
         losses.append(losses_epoch)
+        print("\n=> Expected loss for epoch {} : {}".format(epoch, tc.stack(losses_epoch).mean()))
 
     print('Finished Training\n')
 

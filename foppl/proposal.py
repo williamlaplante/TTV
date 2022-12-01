@@ -1,9 +1,16 @@
 import torch as tc
+import numpy as np
 from torch import nn
 from torch.distributions.constraint_registry import transform_to
 from distributions import Normal
 from torch.autograd import Variable
 
+def init_weights(m):
+    if isinstance(m, nn.Linear):
+        n = m.in_features
+        y = 1.0/n
+        m.weight.data.uniform_(-y, y)
+        m.bias.data.fill_(0.0)
 
 class LSTM(nn.Module):
     def __init__(self, dim_in, dim_out):
@@ -41,7 +48,21 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.dim_in = dim_in
         self.dim_out = dim_out
+        #self.hidden_dim = int((dim_in + dim_out)/2)
+        #self.num_hidden_layers = 4
+        self.activation = nn.Tanh()
         self.flatten = nn.Flatten()
+
+        #building the network
+        """
+        self.layers = [nn.Linear(dim_in, self.hidden_dim), self.activation]
+        for _ in range(self.num_hidden_layers) : self.layers.extend([nn.Linear(self.hidden_dim, self.hidden_dim), self.activation])
+        self.layers.append(nn.Linear(self.hidden_dim, self.dim_out))
+        
+        self.net = nn.Sequential(*self.layers)"""
+
+
+        
         self.net = nn.Sequential(
             nn.Linear(dim_in, 128),
             nn.Tanh(),
@@ -49,9 +70,7 @@ class NeuralNetwork(nn.Module):
             nn.Tanh(),
             nn.Linear(256, 512),
             nn.Tanh(),
-            nn.Linear(512, 1024),
-            nn.Tanh(),
-            nn.Linear(1024, 512),
+            nn.Linear(512, 512),
             nn.Tanh(),
             nn.Linear(512, 256),
             nn.Tanh(),
@@ -61,7 +80,9 @@ class NeuralNetwork(nn.Module):
             nn.Tanh(),
             nn.Linear(64, dim_out),
         )
+        
         self.num_params = 0
+        #self.net.apply(init_weights) #initialize weights
 
     def forward(self, x):
         return self.net(x)
