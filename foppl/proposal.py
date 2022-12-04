@@ -126,6 +126,7 @@ class Proposal():
         return _sample
     
     def log_prob(self, sample : tc.Tensor, y : tc.Tensor) -> tc.Tensor:
+        """the sample should follow the topological order of the graphical model. (i.e. topological() method of custom graph class)"""
         lik = tc.tensor(0.0)
         val = y
         #we need to flip sample, since it comes in topological order and we iterate over the reverse order.
@@ -147,3 +148,58 @@ class Proposal():
         self.num_params = num_params
         return params
 
+
+class Representation():
+    def __init__(self, g):
+        super().__init__()
+        self.graph = g
+        self.reverse_ordered_vars = g.topological()
+        self.reverse_ordered_latent_vars = [var for var in self.reverse_ordered_vars if var not in g.Graph["Y"].keys()]
+        self.n = len(g.Graph["Y"]) #number of observations
+
+        self.distributions = {var : Normal for var in self.reverse_ordered_latent_vars}
+        self.constraints = {var : self.distributions[var].arg_constraints for var in self.reverse_ordered_latent_vars}
+ 
+        self.links = {var : NeuralNetwork(dim_in = self.n + i, dim_out = self.distributions[var].NUM_PARAMS) for i, var in enumerate(self.reverse_ordered_latent_vars)}
+        
+        return
+    
+    def sample(self, y : tc.Tensor) -> dict:
+        _sample = {}
+        val = y #start by conditioning on y
+        with tc.no_grad():
+            for latent in self.reverse_ordered_latent_vars:
+                #get output of NN. Should be of dimension == # dist params
+                nn_out = self.links[latent].forward(val)
+                #iterate over nn output and the associated support for each element (ex : mu, sigma for a Normal, hence sigma has (0,inf) support) and apply appropriate transform
+                dist_params = [transform_to(constr)(dist_param) for constr, dist_param in zip(self.distributions[latent].arg_constraints.values(), nn_out)] #apply constraint transform
+                #sample from the conditional distribution
+                s = self.distributions[latent](*dist_params).sample()
+                _sample.update({latent : s})
+                if s.ndim == 0 : s = s.reshape(-1)
+                val = tc.cat([y, s])
+
+        return _sample
+    
+    def log_prob(self, sample : tc.Tensor, y : tc.Tensor) -> tc.Tensor:
+        """the sample should follow the topological order of the graphical model. (i.e. topological() method of custom graph class)"""
+        lik = tc.tensor(0.0)
+        val = y
+        #we need to flip sample, since it comes in topological order and we iterate over the reverse order.
+        for latent, x in zip(self.reverse_ordered_latent_vars, tc.flip(sample, [0])):
+            nn_out = self.links[latent].forward(val)
+            dist_params = [transform_to(constr)(dist_param) for constr, dist_param in zip(self.distributions[latent].arg_constraints.values(), nn_out)]
+            lik += self.distributions[latent](*dist_params).log_prob(x)
+            if x.ndim == 0: x = x.reshape(-1)
+            val = tc.cat([val, x])
+
+        return lik
+    
+    def get_params(self):
+        params = []
+        num_params = 0
+        for latent, neuralnet in self.links.items():
+            params += [*neuralnet.parameters()]
+            num_params += sum(p.numel() for p in neuralnet.parameters() if p.requires_grad)
+        self.num_params = num_params
+        return params

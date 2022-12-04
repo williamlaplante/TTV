@@ -1,5 +1,7 @@
 import itertools
 import json
+import os
+from datetime import datetime
 import pickle
 import torch as tc
 from torch import nn
@@ -97,24 +99,33 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     num_workers : No idea
 
     """
+    #if its not a graph class, we don't want it
     if not isinstance(g, graph):
         raise Exception("Inference compilation has not yet been implemented for non-graph programs.")
     
+    #Initialize the folder in which we will save information for future diagnostics
+    logdir_suffix = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    logdir = "./results/run_" + logdir_suffix
+    os.mkdir(logdir)
+
+    #Get samples from the model. We want to fit these samples
     print("=> Sampling from the model...")
     dataset = ModelDataset(g=g, num_samples=num_traces_training)
     dataset.build_dataset()
-
     dataloader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
+    #Initialize the proposal distribution
     proposal = Proposal(g, lstm=lstm)
     params = proposal.get_params()
     optimizer = tc.optim.Adam(params, lr=learning_rate)
     losses = []
 
+    #Printing some interesting information for diagnostic purposes
     print("\n=> Training {} parameters | LSTM : {}".format(proposal.num_params, lstm))
     print("=> Running {} epochs...".format(num_epochs+1))
     print("=> Learning Rate : {} | Batch Size : {}".format(learning_rate, batch_size))
 
+    #Train the weights charaterizing the proposal distributions
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print("\n=> Epoch {}...\n".format(epoch))
         losses_epoch = []
@@ -136,11 +147,13 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
             loss.backward()
             optimizer.step()
 
+            #log the loss
             if i%1 == 0 : print("=> Loss : {}".format(loss.detach().clone()))
             losses_epoch.append(loss.detach().clone())
             if wandb_run : log_loss(loss.detach().clone(), i, program=program_name, wandb_name=wandb_name)
 
-        with open("./results/proposal_epoch{}.pkl".format(epoch), "wb") as f:
+        #save the proposal at that epoch for future diagnostics
+        with open(logdir + "/proposal_epoch{}.pkl".format(epoch), "wb") as f:
             pickle.dump(proposal, f)
 
         losses.append(losses_epoch)
@@ -148,36 +161,47 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
 
     print('Finished Training\n')
 
+    #At this point we have P(X | Y). We now want to collect Y=y to make inference on P(X | Y=y)
     observed = []
     for var in dataset.ordered_vars:
         if var in g.Graph["Y"].keys():
             observed.append(tc.tensor(g.Graph["Y"][var]).float())
-
     observed = tc.stack(observed)
-
     print("\n=> Observed values : {}".format(observed))
 
+    #The final step is to perfrom sequential importance sampling by generating samples from the proposal
     print("\n=>Importance sampling with compilation artifact...\n")
     proposal_samples = []
     proposal_weights = []
-    
-    for _ in range(num_samples):
-        sample = proposal.sample(y = observed)
-        proposal_samples.append(tc.stack([sample[latent] for latent in dataset.latent_ordered_vars])) #sample in the topological order
-        proposal_weights.append(dataset.log_prob(sample))
+    model_weights = []
+    weights = []
 
+    for i in range(num_samples):
+        sample_dict = proposal.sample(y = observed)
+        sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars]) #topological order
+        proposal_samples.append(sample_tensor) #sample in the topological order
+        model_weights.append(dataset.log_prob(sample_dict))
+        proposal_weights.append(proposal.log_prob(sample_tensor, observed))
+        weights.append(tc.exp(model_weights[i] - proposal_weights[i]))
 
     proposal_samples = tc.stack(proposal_samples)
     proposal_weights = tc.stack(proposal_weights)
+    model_weights = tc.stack(model_weights)
+    weights = tc.stack(weights)
+    calculate_effective_sample_size(weights, verbose=True)
 
-    calculate_effective_sample_size(proposal_weights, verbose=True)
+
+    #saving everything in a folder
+    tc.save(proposal_samples.detach().clone(), logdir + "/proposal_samples.pt")
+    tc.save(proposal_weights.detach().clone(), logdir + "/proposal_weights.pt")
+    tc.save(model_weights.detach().clone(), logdir + "/model_weights.pt")
+    tc.save(weights.detach().clone(), logdir + "/weights.pt")
+    tc.save(losses, logdir + "/losses.pt")
     
-    tc.save(proposal_samples, "./results/proposal_samples.pt")
-    tc.save(proposal_weights, "./results/proposal_weights.pt")
-    tc.save(losses, "./results/losses.pt")
-    
-    with open("./results/graphical_model.pkl", "wb") as f:
+    with open(logdir + "/graphical_model.pkl", "wb") as f:
         pickle.dump(g, f)
-
+    
+    with open(logdir + "/model.pkl", "wb") as f:
+        pickle.dump(ModelDataset(g=g, num_samples=num_traces_training), f)
 
     return proposal_samples

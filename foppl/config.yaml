@@ -33,7 +33,7 @@ num_samples: 1e3
 #inference compilation specific parameters
 num_traces_training: 2e5 #number of traces the inference compilation engine trains on
 batch_size : 500 #number of samples used to estimate loss
-num_epochs : 5 #number of times we go over the dataset (of size num_traces_training)
+num_epochs : 6 #number of times we go over the dataset (of size num_traces_training)
 learning_rate : 1e-4
 lstm : False
 
