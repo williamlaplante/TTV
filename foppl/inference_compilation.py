@@ -184,18 +184,18 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
         proposal_weights.append(proposal.log_prob(sample_tensor, observed))
         weights.append(tc.exp(model_weights[i] - proposal_weights[i]))
 
-    proposal_samples = tc.stack(proposal_samples)
-    proposal_weights = tc.stack(proposal_weights)
-    model_weights = tc.stack(model_weights)
-    weights = tc.stack(weights)
+    proposal_samples = tc.stack(proposal_samples).detach().clone()
+    proposal_weights = tc.stack(proposal_weights).detach().clone()
+    model_weights = tc.stack(model_weights).detach().clone()
+    weights = tc.stack(weights).detach().clone()
     calculate_effective_sample_size(weights, verbose=True)
 
 
     #saving everything in a folder
-    tc.save(proposal_samples.detach().clone(), logdir + "/proposal_samples.pt")
-    tc.save(proposal_weights.detach().clone(), logdir + "/proposal_weights.pt")
-    tc.save(model_weights.detach().clone(), logdir + "/model_weights.pt")
-    tc.save(weights.detach().clone(), logdir + "/weights.pt")
+    tc.save(proposal_samples, logdir + "/proposal_samples.pt")
+    tc.save(proposal_weights, logdir + "/proposal_weights.pt")
+    tc.save(model_weights, logdir + "/model_weights.pt")
+    tc.save(weights, logdir + "/weights.pt")
     tc.save(losses, logdir + "/losses.pt")
     
     with open(logdir + "/graphical_model.pkl", "wb") as f:

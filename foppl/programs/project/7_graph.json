@@ -1,0 +1,233 @@
+[
+    {
+        "observe-data": [
+            "fn",
+            [
+                "_",
+                "data",
+                "slope",
+                "bias"
+            ],
+            [
+                "let",
+                [
+                    "xn",
+                    [
+                        "first",
+                        "data"
+                    ]
+                ],
+                [
+                    "let",
+                    [
+                        "yn",
+                        [
+                            "second",
+                            "data"
+                        ]
+                    ],
+                    [
+                        "let",
+                        [
+                            "zn",
+                            [
+                                "+",
+                                [
+                                    "*",
+                                    "slope",
+                                    "xn"
+                                ],
+                                "bias"
+                            ]
+                        ],
+                        [
+                            "let",
+                            [
+                                "dontcare9",
+                                [
+                                    "observe",
+                                    [
+                                        "normal",
+                                        "zn",
+                                        0.1
+                                    ],
+                                    "yn"
+                                ]
+                            ],
+                            [
+                                "rest",
+                                [
+                                    "rest",
+                                    "data"
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    },
+    {
+        "V": [
+            "observe3",
+            "observe6",
+            "observe4",
+            "observe7",
+            "sample2",
+            "sample1",
+            "observe8",
+            "observe5"
+        ],
+        "A": {
+            "sample2": [
+                "observe3",
+                "observe6",
+                "observe4",
+                "observe7",
+                "observe8",
+                "observe5"
+            ],
+            "sample1": [
+                "observe3",
+                "observe6",
+                "observe4",
+                "observe7",
+                "observe8",
+                "observe5"
+            ]
+        },
+        "P": {
+            "sample1": [
+                "sample*",
+                [
+                    "normal",
+                    0.0,
+                    10.0
+                ]
+            ],
+            "sample2": [
+                "sample*",
+                [
+                    "normal",
+                    0.0,
+                    10.0
+                ]
+            ],
+            "observe3": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            1.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                2.05
+            ],
+            "observe4": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            2.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                3.94
+            ],
+            "observe5": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            3.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                5.9
+            ],
+            "observe6": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            4.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                8.03
+            ],
+            "observe7": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            5.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                10.1
+            ],
+            "observe8": [
+                "observe*",
+                [
+                    "normal",
+                    [
+                        "+",
+                        [
+                            "*",
+                            "sample1",
+                            6.0
+                        ],
+                        "sample2"
+                    ],
+                    0.1
+                ],
+                11.86
+            ]
+        },
+        "Y": {
+            "observe3": 2.05,
+            "observe4": 3.94,
+            "observe5": 5.9,
+            "observe6": 8.03,
+            "observe7": 10.1,
+            "observe8": 11.86
+        }
+    },
+    [
+        "vector",
+        "sample1",
+        "sample2"
+    ]
+]

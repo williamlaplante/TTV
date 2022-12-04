@@ -1,0 +1,13 @@
+(defn observe-data [_ data slope bias]
+  (let [xn (first data)
+        yn (second data)
+        zn (+ (* slope xn) bias)]
+    (observe (normal zn 0.1) yn)
+    (rest (rest data))))
+
+(let [slope (sample (normal 0.0 10.0))
+      bias  (sample (normal 0.0 10.0))
+      data (vector 1.0 2.05 2.0 3.94 3.0 5.9
+                   4.0 8.03 5.0 10.1 6.0 11.86)]
+  (loop 6 data observe-data slope bias)
+  (vector slope bias))

@@ -12,13 +12,13 @@ deterministic_tests: []
 #[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 probabilistic_tests: []
 #[1,2,3,4,5,6,7,8]
-project_programs: [2]
+project_programs: [7]
 
 #which HW to run
 prog_set: 'project'
 
 # Daphne (re)compilation
-compile: False
+compile: True
 
 # Evaluation method
 #mode: 'desugar'
@@ -33,7 +33,7 @@ num_samples: 1e3
 #inference compilation specific parameters
 num_traces_training: 2e5 #number of traces the inference compilation engine trains on
 batch_size : 500 #number of samples used to estimate loss
-num_epochs : 6 #number of times we go over the dataset (of size num_traces_training)
+num_epochs : 8 #number of times we go over the dataset (of size num_traces_training)
 learning_rate : 1e-4
 lstm : False
 
