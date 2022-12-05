@@ -141,7 +141,11 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
                 print("=> Single sample : X = {} | Y = {}\n".format(X[0], y[0]))
  
             #compute log probability of proposal with 
-            log_Q = tc.stack([proposal.log_prob(x, y) for (x,y) in zip(X, y)])
+            try:
+                log_Q = tc.stack([proposal.log_prob(x, y) for (x,y) in zip(X, y)])
+            except ValueError as e:
+                print(e)
+                continue
 
             loss = -log_Q.mean()
             loss.backward()

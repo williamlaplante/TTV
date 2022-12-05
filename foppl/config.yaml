@@ -12,7 +12,7 @@ deterministic_tests: []
 #[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 probabilistic_tests: []
 #[1,2,3,4,5,6,7,8]
-project_programs: [7]
+project_programs: [8]
 
 #which HW to run
 prog_set: 'project'
