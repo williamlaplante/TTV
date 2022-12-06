@@ -31,7 +31,7 @@ inference_methods : ["inference_compilation"]
 num_samples: 1e3
 
 #inference compilation specific parameters
-num_traces_training: 1e4 #number of traces the inference compilation engine trains on
+num_traces_training: 2e4 #number of traces the inference compilation engine trains on
 batch_size : 500 #number of samples used to estimate loss
 num_epochs : 8 #number of times we go over the dataset (of size num_traces_training)
 learning_rate : 1e-4
@@ -41,6 +41,7 @@ lstm : False
 # For program 2 : batch_size = 400, num_traces_learning = 1e5, num_epochs=3, lr = 1e-4, lstm=False works well (except loss around 6.4)
 #
 
+train_normalizer : False
 save : False
 
 verbose : False

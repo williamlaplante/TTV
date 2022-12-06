@@ -64,7 +64,7 @@ def run_tests(tests, mode, test_type, base_dir, daphne_dir, num_samples=int(1e4)
         print('Test %d passed'%i, '\n')
     print('All '+test_type+' tests passed\n')
 
-def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_dir, num_traces_training, batch_size=int(256), num_samples=int(1e3), learning_rate=1e-4, num_epochs=2, lstm=True, tmax=None, compile=False, wandb_run=False, verbose=False):
+def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_dir, num_traces_training, batch_size=int(256), num_samples=int(1e3), learning_rate=1e-4, num_epochs=2, lstm=True, tmax=None, train_normalizer=True, compile=False, wandb_run=False, verbose=False):
 
     # File paths
     prog_dir = base_dir+'/programs/'+prog_set+'/'
@@ -124,7 +124,7 @@ def run_programs(programs, inference_methods, mode, prog_set, base_dir, daphne_d
 
 
             if inference_method == "inference_compilation":
-                samples = inference_compilation(g = ast_or_graph, num_samples=num_samples, num_traces_training=num_traces_training, learning_rate=learning_rate, batch_size=batch_size, program_name="program " + str(i), num_epochs=num_epochs, lstm=lstm, wandb_name=wandb_name, wandb_run=wandb_run)
+                samples = inference_compilation(g = ast_or_graph, num_samples=num_samples, num_traces_training=num_traces_training, learning_rate=learning_rate, batch_size=batch_size, program_name="program " + str(i), num_epochs=num_epochs, train_normalizer=train_normalizer, lstm=lstm, wandb_name=wandb_name, wandb_run=wandb_run)
                 print("mean : {}, standard deviation : {}".format(samples.mean(axis=0), samples.std(axis=0)))
                 t_finish = time()
 
@@ -151,6 +151,7 @@ def run_all(cfg):
     num_epochs = int(cfg["num_epochs"])
     learning_rate = cfg["learning_rate"]
     lstm = cfg["lstm"]
+    train_normalizer = cfg["train_normalizer"]
 
     # Initialize W&B
     if wandb_run: wandb.init(project=prog_set +'-'+mode, entity=entity)
@@ -166,7 +167,7 @@ def run_all(cfg):
     # Programs
     programs = cfg[prog_set + '_programs']
 
-    run_programs(programs, inference_methods, mode=mode, prog_set=prog_set, base_dir=base_dir, daphne_dir=daphne_dir, num_samples=num_samples, num_traces_training=num_traces_training, learning_rate=learning_rate, lstm=lstm, batch_size=batch_size, num_epochs=num_epochs, compile=compile, wandb_run=wandb_run, verbose=verbose)
+    run_programs(programs, inference_methods, mode=mode, prog_set=prog_set, base_dir=base_dir, daphne_dir=daphne_dir, num_samples=num_samples, num_traces_training=num_traces_training, learning_rate=learning_rate, lstm=lstm, batch_size=batch_size, num_epochs=num_epochs, compile=compile, train_normalizer=train_normalizer, wandb_run=wandb_run, verbose=verbose)
 
     # Finalize W&B
     if wandb_run: wandb.finish()

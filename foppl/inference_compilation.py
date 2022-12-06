@@ -1,5 +1,3 @@
-import itertools
-import json
 import os
 from datetime import datetime
 import pickle
@@ -12,79 +10,7 @@ from proposal import Proposal
 from graph_based_sampling import Eval, graph, standard_env
 from utils import log_loss, log_params, log_sample, calculate_effective_sample_size
 from normalizers import Normalizer
-
-class ModelDataset(Dataset):
-
-    def __init__(self, g, num_samples = int(1e4)):
-        self.graph = g
-        self.ordered_vars = g.topological()
-        self.latent_ordered_vars = [var for var in self.ordered_vars if var not in g.Graph["Y"].keys()]
-        self.num_samples = num_samples
-        self.X = []
-        self.Y = []
-        self.lik = []
-        return
-    
-    def get_sample(self, dict_form = False):
-        sigma = {"logW":tc.tensor(0.0), "logP":tc.tensor(0.0), "logJoint":tc.tensor(0.0)}
-        env = standard_env()
-        sample = {}
-        lik = tc.tensor(0.0)
-        for var in self.ordered_vars:
-            dist, _ = Eval(self.graph.Graph["P"][var][1], sigma, env)
-            s = {var : dist.sample()}
-            lik += dist.log_prob(s[var])
-            env.update(s)
-            sample.update(s)
-        
-        if dict_form:
-            return sample, lik
-
-        else:
-            x = []
-            y = []
-            for key, val in sample.items(): #note : this follows topological order
-                if key.startswith("sample"): x.append(val)
-                elif key.startswith("observe") : y.append(val)
-
-            x = tc.stack(x) #in topological order
-            y = tc.stack(y) #in topological order
-
-            return x, y, lik
-    
-    def log_prob(self, sample : dict) -> tc.Tensor:
-        sigma = {"logW":tc.tensor(0.0), "logP":tc.tensor(0.0), "logJoint":tc.tensor(0.0)}
-        env = standard_env()
-        env.update(sample)
-        lik = tc.tensor(0.0)
-        for var in self.latent_ordered_vars:
-            dist, _ = Eval(self.graph.Graph["P"][var][1], sigma, env)
-            lik+=dist.log_prob(sample[var])
-    
-        return lik
-
-
-    def build_dataset(self):
-        self.X = []
-        self.Y = []
-        self.lik = []
-        for i in tqdm(range(self.num_samples)):
-            x, y, lik = self.get_sample()
-            self.X.append(x)
-            self.Y.append(y)
-            self.lik.append(lik)
-        self.X = tc.stack(self.X) #cols are in topological order
-        self.Y = tc.stack(self.Y) #cols are in topological order
-        self.lik = tc.stack(self.lik)
-        return
-
-    def __getitem__(self, idx):
-        #dataset[idx] -> we don't care about the idx; 
-        return self.X[idx], self.Y[idx], self.lik[idx]
-
-    def __len__(self):
-        # len(dataset)
-        return self.num_samples
+from model import ModelDataset
 
 
 
@@ -114,7 +40,7 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     os.mkdir(logdir)
 
     if train_normalizer:
-        num_samples_normalizer = int(1e4)
+        num_samples_normalizer = int(1e5)
         batch_size_normalizer = 300
 
         print("\n=> Sampling from the model (normalizer)...")
@@ -224,11 +150,14 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     print('Finished Training\n')
 
     #At this point we have P(X | Y). We now want to collect Y=y to make inference on P(X | Y=y)
-    observed = []
+    observed = [] 
+    observed_dict = {} #a dict of observed values -> useful for computation of log prob
     for var in dataset.ordered_vars:
         if var in g.Graph["Y"].keys():
             observed.append(tc.tensor(g.Graph["Y"][var]).float())
-    observed = tc.stack(observed)
+            observed_dict.update({var : tc.tensor(g.Graph["Y"][var]).float()})
+
+    observed = tc.stack(observed) #a tensor of observed values in topological order of the graph
     print("\n=> Observed values : {}".format(observed))
 
     #The final step is to perfrom sequential importance sampling by generating samples from the proposal
@@ -239,16 +168,16 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     weights = []
 
     for i in range(num_samples):
-        sample_dict = proposal.sample(y = observed)
-        sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars])
+        sample_dict = proposal.sample(y = observed) #sample of latent variables conditioned on Y=y
+        sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars]) #tensor form of sample dict
         if normalizer : 
-            sample_tensor = normalizer.denormalize(sample_tensor, observed)
-            sample_dict = {latent : sample_tensor[i] for i, latent in enumerate(dataset.latent_ordered_vars)}
+            sample_tensor = normalizer.denormalize(sample_tensor, observed) #normalize if normalizer is trained
+            sample_dict = {latent : sample_tensor[i] for i, latent in enumerate(dataset.latent_ordered_vars)} #dict form of sample tensor
 
         proposal_samples.append(sample_tensor) #sample in the topological order
-        model_weights.append(dataset.log_prob(sample_dict))
-        proposal_weights.append(proposal.log_prob(sample_tensor, observed))
-        weights.append(tc.exp(model_weights[i] - proposal_weights[i]))
+        model_weights.append(dataset.log_prob({**sample_dict, **observed_dict})) #compute log p(y|x)p(x)
+        proposal_weights.append(proposal.log_prob(sample_tensor, observed)) #compute log q(x|y)
+        weights.append(tc.exp(model_weights[i] - proposal_weights[i])) # w = exp (log p(x,y) - log q(x|y))
 
     proposal_samples = tc.stack(proposal_samples).detach().clone()
     proposal_weights = tc.stack(proposal_weights).detach().clone()
