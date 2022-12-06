@@ -11,7 +11,7 @@ import numpy as np
 from proposal import Proposal
 from graph_based_sampling import Eval, graph, standard_env
 from utils import log_loss, log_params, log_sample, calculate_effective_sample_size
-
+from normalizers import Normalizer
 
 class ModelDataset(Dataset):
 
@@ -88,7 +88,7 @@ class ModelDataset(Dataset):
 
 
 
-def inference_compilation(g : graph, program_name : str, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, learning_rate=1e-4, lstm=False, wandb_name = None, wandb_run = False):
+def inference_compilation(g : graph, program_name : str, num_samples = int(1e3), num_traces_training = int(1e6), num_workers=2, batch_size=int(5e3), num_epochs = 3, learning_rate=1e-4, train_normalizer = True, lstm=False, wandb_name = None, wandb_run = False):
     """
     Parameters
     ----------
@@ -105,8 +105,56 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     
     #Initialize the folder in which we will save information for future diagnostics
     logdir_suffix = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    logdir = "./results/run_" + logdir_suffix
+
+    if train_normalizer:
+        logdir = "./results/run_" + logdir_suffix + "_normalizer"
+    else:
+        logdir = "./results/run_" + logdir_suffix
+
     os.mkdir(logdir)
+
+    if train_normalizer:
+        num_samples_normalizer = int(1e4)
+        batch_size_normalizer = 300
+
+        print("\n=> Sampling from the model (normalizer)...")
+        dataset = ModelDataset(g=g, num_samples=num_samples_normalizer)
+        dataset.build_dataset()
+        dataloader = DataLoader(dataset=dataset, batch_size=batch_size_normalizer, shuffle=True, num_workers=num_workers)
+
+        print("\n=> Training Normalizer...")
+        losses_normalizers = []
+        normalizer = Normalizer(g)
+        normalizer_params = normalizer.get_params()
+        print("\n=> Training {} parameters for the normalizer...".format(normalizer.num_params))
+
+        normalizer_optimizer = tc.optim.Adam(normalizer_params)
+
+        for i, data in enumerate(dataloader):
+            normalizer_optimizer.zero_grad()
+            
+            X, y, lik = data
+
+            #compute log probability
+            try:
+                log_normalizer = tc.stack([normalizer.log_prob(x, y) for (x,y) in zip(X, y)])
+            except ValueError as e:
+                print(e)
+                continue
+
+            loss_norm = -log_normalizer.mean()
+            loss_norm.backward()
+            normalizer_optimizer.step()
+
+            if i%1 == 0 : print("=> Loss (Normalizer) : {}".format(loss_norm.detach().clone()))
+            losses_normalizers.append(loss_norm.detach().clone())
+        
+        losses_normalizers = tc.stack(losses_normalizers)
+        tc.save(losses_normalizers, logdir + "/losses_normalizer.pt")
+
+        with open(logdir + "/normalizer.pkl", "wb") as f:
+            pickle.dump(normalizer, f)
+
 
     #Get samples from the model. We want to fit these samples
     print("=> Sampling from the model...")
@@ -142,7 +190,17 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
  
             #compute log probability of proposal with 
             try:
-                log_Q = tc.stack([proposal.log_prob(x, y) for (x,y) in zip(X, y)])
+                log_Q = []
+                for (x,y) in zip(X, y):
+                    if train_normalizer: #if we have a normalizer, normalize x
+                        z, mus, sigmas = normalizer.normalize(x, y) #x is in topological order -> z should be too
+                    else:#else, z is just x
+                        z = x
+                    
+                    log_Q.append(proposal.log_prob(z, y)) #Jacobian here? Don't think so
+
+                log_Q = tc.stack(log_Q)
+                    
             except ValueError as e:
                 print(e)
                 continue
@@ -182,7 +240,11 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
 
     for i in range(num_samples):
         sample_dict = proposal.sample(y = observed)
-        sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars]) #topological order
+        sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars])
+        if normalizer : 
+            sample_tensor = normalizer.denormalize(sample_tensor, observed)
+            sample_dict = {latent : sample_tensor[i] for i, latent in enumerate(dataset.latent_ordered_vars)}
+
         proposal_samples.append(sample_tensor) #sample in the topological order
         model_weights.append(dataset.log_prob(sample_dict))
         proposal_weights.append(proposal.log_prob(sample_tensor, observed))
