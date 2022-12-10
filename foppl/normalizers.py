@@ -111,7 +111,7 @@ class Normalizer():
         return params
     
 
-    def normalize(self, x : tc.Tensor, y : tc.Tensor):
+    def normalize(self, x : tc.Tensor, y : tc.Tensor)-> tuple[tc.Tensor, tc.Tensor, tc.Tensor]:
         """returns a normalized version of x | Y=y, so z | Y=y. x is in topological"""
         z = []
         mus = []
@@ -130,7 +130,7 @@ class Normalizer():
 
         return z, mus, sigmas
     
-    def denormalize(self, z : tc.Tensor, y : tc.Tensor):
+    def denormalize(self, z : tc.Tensor, y : tc.Tensor)-> tc.Tensor:
         """returns a denormalized version of z, so x | Y=y. z is in topological"""
         x = []
         mus = []
@@ -146,6 +146,5 @@ class Normalizer():
         x = tc.stack(x)
         mus = tc.stack(mus)
         sigmas = tc.stack(sigmas)
-
+        jacobian = tc.prod(sigmas)
         return x
-        

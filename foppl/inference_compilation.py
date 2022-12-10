@@ -170,7 +170,7 @@ def inference_compilation(g : graph, program_name : str, num_samples = int(1e3),
     for i in range(num_samples):
         sample_dict = proposal.sample(y = observed) #sample of latent variables conditioned on Y=y
         sample_tensor = tc.stack([sample_dict[latent] for latent in dataset.latent_ordered_vars]) #tensor form of sample dict
-        if normalizer : 
+        if train_normalizer : 
             sample_tensor = normalizer.denormalize(sample_tensor, observed) #normalize if normalizer is trained
             sample_dict = {latent : sample_tensor[i] for i, latent in enumerate(dataset.latent_ordered_vars)} #dict form of sample tensor
 
